@@ -1,0 +1,656 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<title>Habitat · Tu caso</title>
+<meta name="theme-color" content="#FFFFFF">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="img/icon-192.png">
+<style>
+@font-face{font-family:Rubik;src:url(fonts/rubik.woff2) format("woff2");font-weight:300 900;font-display:block}
+@font-face{font-family:"Public Sans";src:url(fonts/publicsans.woff2) format("woff2");font-weight:100 900;font-display:block}
+:root{
+  --ink:#1C2130; --ink2:#4A5060; --mute:#8A909C; --line:#E4E0D8;
+  --bg:#F6F4F0; --card:#FFFFFF; --soft:#ECE8E1;
+  --red:#C90A2C; --redsoft:#F7DDE1;
+  --blue:#1F5FAE; --bluesoft:#E3ECF8;
+  --green:#177A4B; --greensoft:#DDF1E5;
+  --grey:#B7BBC3;
+  --r:20px;
+  --head:Rubik,system-ui,sans-serif; --body:"Public Sans",system-ui,sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;overflow:hidden;background:#E9E5DE;color:var(--ink);font-family:var(--body);-webkit-user-select:none;user-select:none}
+button{font:inherit;color:inherit;border:0;background:none;cursor:pointer}
+.app{position:fixed;left:0;top:0;width:1280px;height:760px;transform-origin:0 0;overflow:hidden;display:grid;grid-template-rows:auto 1fr auto;padding:env(safe-area-inset-top) env(safe-area-inset-right) 0 env(safe-area-inset-left)}
+
+/* ---------- top bar ---------- */
+.top{display:flex;align-items:center;gap:20px;padding:18px 32px;background:var(--card);border-bottom:1px solid var(--line);z-index:5}
+.top img{height:30px}
+.top .sep{width:1px;height:28px;background:var(--line)}
+.top .ttl{font-family:var(--head);font-weight:600;font-size:20px;color:var(--ink2)}
+.top .sp{flex:1}
+.chip-case{white-space:nowrap;display:flex;align-items:center;gap:12px;padding:10px 18px;border-radius:999px;background:var(--soft);font-size:16px;font-weight:600;color:var(--ink)}
+.chip-case .dot{width:10px;height:10px;border-radius:50%;background:var(--red)}
+.chip-case .edit{color:var(--blue)}
+
+/* ---------- stage ---------- */
+.stage{position:relative;overflow:hidden}
+.screen{position:absolute;inset:0;background:var(--bg);padding:26px 44px 22px;display:flex;flex-direction:column;gap:18px;opacity:0;pointer-events:none;transform:translateX(40px);transition:opacity .45s ease,transform .45s cubic-bezier(.2,.8,.2,1);overflow-y:auto;overflow-x:hidden}
+.screen.on{opacity:1;pointer-events:auto;transform:none!important}
+.screen.left{transform:translateX(-40px)}
+.eyebrow{font-size:15px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;color:var(--red)}
+h1{font-family:var(--head);font-weight:700;font-size:40px;line-height:1.08;letter-spacing:-.5px}
+h2{font-family:var(--head);font-weight:700;font-size:34px;line-height:1.12;letter-spacing:-.3px}
+.lead{font-size:19px;line-height:1.45;color:var(--ink2);max-width:760px}
+.row{display:flex;gap:24px}
+.grow{flex:1;min-width:0}
+.card{background:var(--card);border-radius:var(--r);padding:28px;box-shadow:0 1px 0 rgba(0,0,0,.03),0 8px 24px rgba(28,33,48,.05)}
+.num{font-family:var(--head);font-weight:700;font-variant-numeric:tabular-nums;letter-spacing:-.5px}
+.blue{color:var(--blue)} .green{color:var(--green)} .mute{color:var(--mute)} .ink2{color:var(--ink2)}
+.small{font-size:14px;line-height:1.4;color:var(--ink2)}
+.src{display:inline-flex;align-items:center;gap:8px;padding:8px 14px;border-radius:999px;background:var(--bluesoft);color:var(--blue);font-size:14px;font-weight:700}
+.src svg{width:16px;height:16px}
+.calc{display:flex;flex-wrap:wrap;align-items:center;gap:10px;font-size:18px;color:var(--ink2);padding:16px 20px;background:var(--soft);border-radius:14px}
+.calc b{font-family:var(--head);color:var(--ink);font-size:20px}
+.calc .op{color:var(--mute);font-weight:700}
+.calc .res{color:var(--blue)}
+.calc .res.g{color:var(--green)}
+.pill{display:inline-flex;align-items:center;gap:8px;padding:8px 14px;border-radius:999px;font-size:14px;font-weight:700}
+.pill.g{background:var(--greensoft);color:var(--green)}
+.pill.r{background:var(--redsoft);color:var(--red)}
+.pill.b{background:var(--bluesoft);color:var(--blue)}
+
+/* ---------- home ---------- */
+#home{flex-direction:row;padding:0;gap:0}
+.home-l{flex:1.05;padding:44px 52px 36px;display:flex;flex-direction:column;justify-content:space-between}
+.home-l img{width:340px}
+.home-l h1{font-size:50px;margin-top:4px}
+.home-r{flex:1;background:var(--red);position:relative;overflow:hidden;display:flex;flex-direction:column;justify-content:center;gap:16px;padding:48px}
+.home-r::before{content:"";position:absolute;right:-120px;top:-120px;width:420px;height:420px;border:56px solid rgba(255,255,255,.08);border-radius:50%}
+.home-r::after{content:"";position:absolute;left:-80px;bottom:-160px;width:360px;height:360px;border:40px solid rgba(255,255,255,.06);border-radius:50%}
+.tile{position:relative;z-index:1;display:flex;align-items:center;gap:22px;padding:24px 28px;background:#fff;border-radius:var(--r);text-align:left;transition:transform .15s}
+.tile:active{transform:scale(.98)}
+.tile .ic{width:60px;height:60px;border-radius:16px;background:var(--soft);display:grid;place-items:center;flex:none}
+.tile .ic svg{width:30px;height:30px;stroke:var(--ink)}
+.tile .tx{display:flex;flex-direction:column}
+.tile .t{font-family:var(--head);font-weight:700;font-size:26px}
+.tile .d{font-size:16px;color:var(--ink2);margin-top:4px}
+.tile .go{margin-left:auto;font-size:28px;color:var(--mute)}
+.cta{display:inline-flex;align-items:center;justify-content:center;gap:12px;padding:20px 30px;border-radius:16px;background:var(--ink);color:#fff;font-family:var(--head);font-weight:600;font-size:21px;transition:transform .15s}
+.cta:active{transform:scale(.98)}
+.cta.ghost{background:var(--soft);color:var(--ink)}
+.n1{display:flex;align-items:center;gap:18px;padding:18px 22px;border-radius:16px;background:var(--card);max-width:560px}
+.n1 .big{font-family:var(--head);font-weight:800;font-size:44px;color:var(--red);line-height:1}
+.agent{font-size:15px;color:var(--ink2)}
+.agent b{color:var(--ink)}
+
+/* ---------- profile ---------- */
+.grid2{display:grid;grid-template-columns:1.4fr 1fr;gap:20px;flex:1;min-height:0}
+.sl2{display:grid;grid-template-columns:1fr 1fr;gap:28px}
+#perfil .chip{padding:14px 0;min-width:0;font-size:18px}
+#afpChips{display:grid;grid-template-columns:repeat(6,1fr)}
+#fondoChips{display:grid;grid-template-columns:repeat(5,1fr);max-width:420px}
+#perfil h1{font-size:38px}
+.field{display:flex;flex-direction:column;gap:12px}
+.flabel{font-size:15px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--ink2)}
+.chips{display:flex;flex-wrap:wrap;gap:10px}
+.chip{padding:12px 20px;border-radius:14px;background:var(--soft);font-weight:700;font-size:18px;min-width:64px;text-align:center;transition:background .2s,color .2s,transform .15s}
+.chip:active{transform:scale(.96)}
+.chip.on{background:var(--ink);color:#fff}
+.chip small{display:block;font-weight:500;font-size:13px;opacity:.7;margin-top:2px}
+.slider{display:flex;flex-direction:column;gap:2px}
+.slider .val{display:flex;align-items:baseline;gap:10px}
+.slider .val .num{font-size:28px;color:var(--blue)}
+input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:40px;background:transparent}
+input[type=range]::-webkit-slider-runnable-track{height:10px;border-radius:99px;background:linear-gradient(90deg,var(--blue) var(--p,50%),var(--soft) var(--p,50%))}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:38px;height:38px;border-radius:50%;background:#fff;border:3px solid var(--blue);margin-top:-14px;box-shadow:0 4px 12px rgba(31,95,174,.25)}
+input[type=range]::-moz-range-track{height:10px;border-radius:99px;background:var(--soft)}
+input[type=range]::-moz-range-progress{height:10px;border-radius:99px;background:var(--blue)}
+input[type=range]::-moz-range-thumb{width:32px;height:32px;border-radius:50%;background:#fff;border:3px solid var(--blue)}
+.steps{display:flex;gap:8px}
+.steps button{width:44px;height:40px;border-radius:12px;background:var(--soft);font-size:24px;font-weight:700}
+.scen{display:flex;flex-direction:column;gap:16px;justify-content:center}
+.scen .tag{align-self:flex-start}
+.scen h2{font-size:27px}
+.scen{padding:24px 28px!important;gap:12px!important}
+.scen .lead{font-size:17px}
+.scen .stat .num{font-size:38px}
+
+/* ---------- charts ---------- */
+.bars{display:flex;flex-direction:column;gap:12px}
+.bar{display:grid;grid-template-columns:150px 1fr 150px;align-items:center;gap:16px}
+.bar .nm{font-weight:700;font-size:18px}
+.bar .nm small{display:block;font-weight:500;font-size:14px;color:var(--ink2)}
+.bar .tr{height:42px;background:var(--soft);border-radius:0 12px 12px 0;position:relative;overflow:hidden}
+.bar .fl{position:absolute;inset:0 auto 0 0;width:0;background:var(--grey);border-radius:0 12px 12px 0;transition:width .9s cubic-bezier(.2,.8,.2,1)}
+.bar.hab .fl{background:var(--red)}
+.bar.you .nm{color:var(--ink)}
+.bar.you .tr{outline:3px solid var(--ink);outline-offset:3px}
+.bar .v{font-family:var(--head);font-weight:700;font-size:22px;text-align:right;font-variant-numeric:tabular-nums}
+.youtag{font-size:12px;font-weight:800;letter-spacing:1px;color:#fff;background:var(--ink);padding:3px 8px;border-radius:6px;margin-left:8px;vertical-align:middle}
+.stat .lbl{font-size:15px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--ink2)}
+.stat .num{font-size:58px;line-height:1.05;margin-top:6px}
+.stat .sub{font-size:17px;color:var(--ink2);margin-top:6px}
+.vchart{display:flex;align-items:flex-end;gap:26px;height:100%;padding-top:10px}
+.fgroup{flex:1;display:flex;flex-direction:column;align-items:center;gap:12px;height:100%;padding:10px 6px 0;border-radius:16px;transition:background .25s}
+.fgroup.on{background:var(--soft)}
+.fbars{flex:1;width:100%;display:flex;align-items:flex-end;justify-content:center;gap:14px}
+.fb{width:38%;max-width:56px;height:0;border-radius:10px 10px 0 0;background:var(--grey);position:relative;transition:height .9s cubic-bezier(.2,.8,.2,1)}
+.fb.hab{background:var(--red)}
+.fb span{position:absolute;top:-26px;left:50%;transform:translateX(-50%);font-family:var(--head);font-weight:700;font-size:14px;white-space:nowrap;font-variant-numeric:tabular-nums}
+.fname{font-weight:800;font-size:18px;padding-bottom:10px}
+.legend{display:flex;gap:20px;font-size:15px;font-weight:600;color:var(--ink2)}
+.legend i{display:inline-block;width:14px;height:14px;border-radius:4px;margin-right:8px;vertical-align:-2px}
+
+/* projection */
+.yrs{display:flex;align-items:center;gap:20px}
+.yrs .num{font-size:44px;color:var(--blue);min-width:150px}
+svg.line{width:100%;height:100%;overflow:visible}
+
+/* service */
+#proyStats .card{padding:18px 24px}
+#proyStats .num{font-size:36px!important}
+#proyStats .sub{font-size:15px}
+#servicio,#resumen{justify-content:center}
+.svc{display:grid;grid-template-columns:repeat(4,1fr);gap:18px}
+.svc .card{display:flex;flex-direction:column;gap:14px;padding:24px}
+.svc .ic{width:54px;height:54px;border-radius:14px;background:var(--redsoft);display:grid;place-items:center}
+.svc .ic svg{width:28px;height:28px;stroke:var(--red)}
+.svc h3{font-family:var(--head);font-size:21px;font-weight:700}
+.svc p{font-size:16px;line-height:1.45;color:var(--ink2)}
+.dig{display:flex;gap:18px}
+.dig .card{flex:1;display:flex;align-items:center;gap:16px;padding:20px 24px}
+.dig .card b{font-family:var(--head);font-size:18px}
+.dig .card p{font-size:15px;color:var(--ink2)}
+
+
+/* generacionales */
+.fg{display:grid;grid-template-columns:repeat(10,minmax(0,1fr));grid-template-rows:minmax(0,1fr);gap:8px;flex:1;min-height:0}
+.fgc{display:flex;flex-direction:column;align-items:stretch;gap:6px;padding:6px 4px 8px;min-height:0;border-radius:14px;transition:background .25s,transform .15s}
+.fgc:active{transform:scale(.97)}
+.fgc.on{background:var(--ink);color:#fff}
+.fgc .stk{flex:1;display:flex;flex-direction:column;border-radius:10px;overflow:hidden;min-height:0}
+.fgc .gr{background:var(--red);transition:flex-grow .6s}
+.fgc .pr{background:var(--grey);transition:flex-grow .6s}
+.fgc.on .pr{background:#8A909C}
+.fgc .et{font-family:var(--head);font-weight:700;font-size:20px;text-align:center;line-height:1}
+.fgc .ag{font-size:12px;text-align:center;color:var(--ink2);font-weight:600}
+.fgc.on .ag{color:#fff;opacity:.8}
+.fgx{display:flex;justify-content:space-between;font-size:14px;font-weight:700;color:var(--ink2)}
+.fgx span::before{content:"";display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:7px;vertical-align:-1px}
+.fgx .g::before{background:var(--red)} .fgx .p::before{background:var(--grey)}
+.facts{display:flex;flex-direction:column;gap:10px}
+.fact{display:flex;gap:12px;align-items:flex-start;font-size:15px;line-height:1.35;color:var(--ink2)}
+.fact b{color:var(--ink)}
+.fact .k{flex:none;width:30px;height:30px;border-radius:9px;display:grid;place-items:center;font-weight:800;font-size:15px}
+.fact .k.c{background:var(--bluesoft);color:var(--blue)} .fact .k.n{background:var(--greensoft);color:var(--green)}
+.inform{display:flex;align-items:center;gap:20px;background:var(--ink);color:#fff;border-radius:var(--r);padding:16px 26px}
+.inform p{font-size:17px;line-height:1.4;opacity:.9}
+.inform b{font-family:var(--head);font-size:21px;display:block;opacity:1;margin-bottom:2px}
+
+/* summary */
+.sumgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
+.sumgrid .card.hl{background:var(--greensoft)}
+.next{display:flex;align-items:center;gap:28px;background:var(--ink);color:#fff;border-radius:var(--r);padding:30px 36px}
+.next .num{font-size:64px;line-height:1}
+.next p{font-size:19px;line-height:1.45;opacity:.85}
+
+/* ---------- nav ---------- */
+.nav{display:flex;justify-content:center;gap:6px;padding:10px 16px calc(10px + env(safe-area-inset-bottom));background:var(--card);border-top:1px solid var(--line)}
+.nav button{display:flex;flex-direction:column;align-items:center;gap:4px;padding:8px 14px;border-radius:14px;font-size:13px;font-weight:700;color:var(--mute);min-width:92px;transition:background .2s,color .2s}
+.nav button svg{width:26px;height:26px;stroke:currentColor}
+.nav button.on{color:var(--ink);background:var(--soft)}
+.prog{position:absolute;left:0;top:0;height:3px;background:var(--red);transition:width .45s}
+
+/* ---------- source sheet ---------- */
+.sheet-bg{position:absolute;inset:0;background:rgba(28,33,48,.35);opacity:0;pointer-events:none;transition:opacity .3s;z-index:20}
+.sheet{position:absolute;left:50%;bottom:0;width:min(820px,100%);transform:translate(-50%,105%);background:var(--card);border-radius:24px 24px 0 0;padding:28px 36px calc(32px + env(safe-area-inset-bottom));z-index:21;transition:transform .4s cubic-bezier(.2,.8,.2,1);box-shadow:0 -10px 40px rgba(0,0,0,.15)}
+.sheet.on{transform:translate(-50%,0)}
+.sheet-bg.on{opacity:1;pointer-events:auto}
+.sheet .grab{width:56px;height:6px;border-radius:9px;background:var(--line);margin:0 auto 18px}
+.sheet h3{font-family:var(--head);font-size:24px;margin:8px 0 14px}
+.sheet dl{display:grid;grid-template-columns:150px 1fr;gap:12px 18px;font-size:17px;line-height:1.45}
+.sheet dt{font-weight:700;color:var(--ink2)}
+.sheet .warn{margin-top:18px;font-size:14px;color:var(--ink2);padding:12px 16px;background:var(--soft);border-radius:12px}
+
+/* ---------- portrait ---------- */
+@media (orientation:portrait){
+  #home{flex-direction:column}
+  .home-l{flex:none;padding:40px}
+  .home-r{flex:1;padding:32px 40px}
+  .grid2{grid-template-columns:1fr}
+  .row.st{flex-direction:column}
+  .top .ttl,.top .sep{display:none}
+  .row.st>div[style*="width:380px"],.row.st>.side{width:auto!important}
+  #afpChips{grid-template-columns:repeat(3,1fr)}
+  .sl2{grid-template-columns:1fr}
+  .svc{grid-template-columns:repeat(2,1fr)}
+  .sumgrid{grid-template-columns:1fr}
+  .nav button{min-width:0;padding:8px 10px}
+}
+@media (max-height:700px){ .screen{padding:24px 36px 20px;gap:18px} h1{font-size:38px} .stat .num{font-size:48px} }
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="top">
+    <img src="img/logo-compact.png" alt="AFP Habitat">
+    <div class="sep"></div>
+    <div class="ttl" id="ttl">Inicio</div>
+    <div class="sp"></div>
+    <button class="chip-case" id="fsBtn" title="Pantalla completa" style="padding:10px 14px"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button>
+    <button class="chip-case" id="caseChip" data-go="perfil"><span class="dot"></span><span id="caseTxt"></span><span class="edit">Editar</span></button>
+  </header>
+
+  <main class="stage" id="stage">
+    <div class="prog" id="prog"></div>
+
+    <!-- INICIO -->
+    <section class="screen" id="home" data-title="Inicio">
+      <div class="home-l">
+        <img src="img/logo.png" alt="AFP Habitat">
+        <div style="display:flex;flex-direction:column;gap:22px">
+          <p class="eyebrow">Asesoría previsional</p>
+          <h1>Lo que pagas, lo que rentas y quién te acompaña.</h1>
+          <div class="n1"><span class="big">N°1</span><span class="small" style="font-size:16px">en rentabilidad en los <b>5 fondos</b> desde que existen los multifondos (sep 2002 – <span class="dataMonth"></span>).</span><button class="src" data-src="ranking" aria-label="Fuente">i</button></div>
+        </div>
+        <div style="display:flex;align-items:center;gap:20px;flex-wrap:wrap">
+          <button class="cta" data-go="perfil">Armar tu caso <span>→</span></button>
+          <p class="agent"><b>José Miguel Bravo</b><br>Ejecutivo previsional · AFP Habitat</p>
+        </div>
+      </div>
+      <div class="home-r">
+        <button class="tile" data-go="costo"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M15 9.5c-.5-1-1.6-1.5-3-1.5-1.7 0-3 .8-3 2s1.3 1.7 3 2 3 .8 3 2-1.3 2-3 2c-1.4 0-2.5-.5-3-1.5M12 6v2M12 16v2"/></svg></span><span class="tx"><span class="t">Costo</span><span class="d">Cuánto pagas de comisión cada mes</span></span><span class="go">›</span></button>
+        <button class="tile" data-go="rentab"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="m7 15 4-4 3 3 6-7"/></svg></span><span class="tx"><span class="t">Rentabilidad</span><span class="d">Cuánto crece tu ahorro, fondo por fondo</span></span><span class="go">›</span></button>
+        <button class="tile" data-go="proy"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></span><span class="tx"><span class="t">En el tiempo</span><span class="d">La diferencia, año a año</span></span><span class="go">›</span></button>
+        <button class="tile" data-go="servicio"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 13c0 5-3.5 7.5-7.7 9a1 1 0 0 1-.6 0C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.2-2.7a1.2 1.2 0 0 1 1.6 0C14.5 3.8 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/></svg></span><span class="tx"><span class="t">Servicio</span><span class="d">Quién te acompaña y cómo</span></span><span class="go">›</span></button>
+      </div>
+    </section>
+
+    <!-- PERFIL -->
+    <section class="screen" id="perfil" data-title="Tu caso">
+      <div><p class="eyebrow">Paso 1 · Tu caso</p><h1>Partamos por tus números.</h1></div>
+      <div class="grid2">
+        <div class="card" style="display:flex;flex-direction:column;justify-content:center;gap:22px;padding:24px 28px">
+          <div class="field"><span class="flabel">¿En qué AFP estás hoy?</span><div class="chips" id="afpChips"></div></div>
+          <div class="field"><span class="flabel">¿En qué fondo?</span><div class="chips" id="fondoChips"></div></div>
+          <div class="sl2"><div class="slider"><span class="flabel">Sueldo imponible</span>
+            <div class="val"><span class="num" id="sueldoV"></span><span class="grow"></span><span class="steps"><button data-step="sueldo" data-d="-1">−</button><button data-step="sueldo" data-d="1">+</button></span></div>
+            <input type="range" id="sueldo" min="800000" max="3600000" step="50000"></div>
+          <div class="slider"><span class="flabel">Saldo acumulado</span>
+            <div class="val"><span class="num" id="saldoV"></span><span class="grow"></span><span class="steps"><button data-step="saldo" data-d="-1">−</button><button data-step="saldo" data-d="1">+</button></span></div>
+            <input type="range" id="saldo" min="5000000" max="300000000" step="1000000"></div></div>
+        </div>
+        <div class="card scen" id="scen"></div>
+      </div>
+    </section>
+
+    <!-- COSTO -->
+    <section class="screen" id="costo" data-title="Costo">
+      <div class="row" style="align-items:flex-end"><div class="grow"><p class="eyebrow">1 · Costo de administración</p><h1 id="costoH"></h1></div><button class="src" data-src="comision"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg>Fuente</button></div>
+      <div class="row st grow" style="min-height:0">
+        <div class="card grow" style="display:flex;flex-direction:column;gap:20px;justify-content:center">
+          <p class="flabel">Lo que pagas cada mes con tu sueldo de <span class="blue" id="costoSueldo"></span></p>
+          <div class="bars" id="costoBars"></div>
+        </div>
+        <div style="width:380px;display:flex;flex-direction:column;gap:20px">
+          <div class="card stat grow" style="display:flex;flex-direction:column;justify-content:center" id="costoStat"></div>
+          <div class="calc" id="costoCalc"></div>
+        </div>
+      </div>
+      <p class="small">La comisión se descuenta de tu sueldo cada mes, no de tu ahorro. AFP Uno tiene hoy la comisión más baja del sistema (0,46%).</p>
+    </section>
+
+    <!-- RENTABILIDAD -->
+    <section class="screen" id="rentab" data-title="Rentabilidad">
+      <div class="row" style="align-items:flex-end"><div class="grow"><p class="eyebrow">2 · Rentabilidad</p><h1 id="rentH"></h1></div><button class="src" data-src="rentab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg>Fuente</button></div>
+      <div class="row st grow" style="min-height:0">
+        <div class="card grow" style="display:flex;flex-direction:column;gap:14px;min-height:340px">
+          <div class="row" style="align-items:center"><p class="flabel grow" style="font-size:13px">Rentabilidad real anual · sep 2002 – <span class="dataMonth"></span></p><div class="legend"><span><i style="background:var(--red)"></i>Habitat</span><span><i style="background:var(--grey)"></i><span id="legYou"></span></span></div></div>
+          <div class="vchart grow" id="vchart"></div>
+          <p class="small">Toca un fondo para ver tu diferencia.</p>
+        </div>
+        <div style="width:380px;display:flex;flex-direction:column;gap:20px">
+          <div class="card stat grow" style="display:flex;flex-direction:column;justify-content:center" id="rentStat"></div>
+          <div class="calc" id="rentCalc"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- PROYECCIÓN -->
+    <section class="screen" id="proy" data-title="En el tiempo">
+      <div class="row" style="align-items:flex-end"><div class="grow"><p class="eyebrow">3 · En el tiempo</p><h1 id="proyH"></h1></div><button class="src" data-src="proy"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg>Cómo se calcula</button></div>
+      <div class="row st grow" style="min-height:0">
+        <div class="card grow" style="display:flex;flex-direction:column;gap:12px;min-height:320px">
+          <div class="yrs"><span class="num" id="yrsV"></span><input type="range" id="yrs" min="1" max="30" step="1" class="grow"></div>
+          <div class="grow" style="position:relative;min-height:200px"><svg class="line" id="line" preserveAspectRatio="none"></svg></div>
+          <div class="legend"><span><i style="background:var(--red)"></i>Saldo con Habitat</span><span><i style="background:var(--grey)"></i><span id="legYou2"></span></span><span><i style="background:var(--greensoft);border:2px solid var(--green)"></i>Diferencia a tu favor</span></div>
+        </div>
+        <div style="width:380px;display:flex;flex-direction:column;gap:12px" id="proyStats"></div>
+      </div>
+      <p class="small">Escenario referencial con tu saldo actual, sin nuevos aportes, si se repite la rentabilidad histórica de tu fondo. La rentabilidad pasada no garantiza rentabilidades futuras.</p>
+    </section>
+
+    <!-- SERVICIO -->
+    <section class="screen" id="servicio" data-title="Servicio">
+      <div><p class="eyebrow">4 · Servicio</p><h1>Lo complejo, en simple. Y siempre con alguien a cargo.</h1></div>
+      <div class="svc">
+        <div class="card"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="m7 15 4-4 3 3 6-7"/></svg></span><h3>Análisis cada 15 días</h3><p>Reviso cómo se mueven los fondos y te aviso si conviene ajustar.</p></div>
+        <div class="card"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg></span><h3>Informe mensual</h3><p>Rentabilidad y valor cuota del mes, directo a tu WhatsApp.</p></div>
+        <div class="card"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></span><h3>Contacto directo</h3><p>Hablas conmigo, no con un call center. Una persona que conoce tu caso.</p></div>
+        <div class="card"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 13c0 5-3.5 7.5-7.7 9a1 1 0 0 1-.6 0C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.2-2.7a1.2 1.2 0 0 1 1.6 0C14.5 3.8 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/></svg></span><h3>Acompañamiento</h3><p>Cambios de fondo, ahorro voluntario y la llegada de los Fondos Generacionales.</p></div>
+      </div>
+      <div><p class="flabel" style="margin-bottom:12px">Y cuando quieras hacerlo tú mismo</p>
+      <div class="dig">
+        <div class="card"><span class="pill b">App</span><div><b>App Habitat</b><p>Saldo, cartola y cambio de fondo desde el celular.</p></div></div>
+        <div class="card"><span class="pill b">Web</span><div><b>Sucursal virtual</b><p>Certificados y trámites en línea, a cualquier hora.</p></div></div>
+        <div class="card"><span class="pill b">24/7</span><div><b>Agente virtual</b><p>Respuestas rápidas a consultas frecuentes.</p></div></div>
+      </div></div>
+    </section>
+
+    <!-- GENERACIONALES -->
+    <section class="screen" id="gen" data-title="Fondos Generacionales">
+      <div class="row" style="align-items:flex-end"><div class="grow"><p class="eyebrow">5 · Lo que viene · 1 de abril de 2027</p><h1>Los fondos A a E pasan a ser 10 fondos según tu edad.</h1></div><button class="src" data-src="gen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg>Fuente</button></div>
+      <div class="row st grow" style="min-height:0">
+        <div class="card grow" style="display:flex;flex-direction:column;gap:12px;min-height:300px">
+          <div class="row" style="align-items:center;gap:16px"><p class="flabel grow">Tu edad hoy · toca una etapa o mueve la barra</p><span class="num blue" style="font-size:34px" id="edadV"></span></div>
+          <input type="range" id="edad" min="20" max="80" step="1">
+          <div class="fg" id="fgBars"></div>
+          <div class="fgx"><span class="g">Más crecimiento</span><span class="p">Más protección</span></div>
+          <p class="small" style="font-size:13px;margin-top:-4px">Esquema ilustrativo: el fondo baja su riesgo de forma gradual a medida que te acercas a pensionarte.</p>
+        </div>
+        <div class="side" style="width:400px;display:flex;flex-direction:column;gap:12px">
+          <div class="card" style="padding:16px 22px" id="fgYou"></div>
+          <div class="card facts" style="padding:16px 22px;flex:1;justify-content:center">
+            <div class="fact"><span class="k c">↻</span><span><b>Te asignan solo.</b> Tu ahorro obligatorio queda en el fondo de tu año de nacimiento hasta que te pensionas.</span></div>
+            <div class="fact"><span class="k c">↘</span><span><b>El fondo se ajusta solo.</b> Más crecimiento cuando eres joven, más protección cerca de la pensión.</span></div>
+            <div class="fact"><span class="k n">✓</span><span><b>Lo que no cambia:</b> tu ahorro sigue siendo tuyo y puedes cambiarte de AFP cuando quieras.</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="inform"><svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><div><b>Yo te mantengo informado con este cambio.</b><p>Te aviso en qué fondo quedas, qué significa para ti y qué hacer con tu ahorro voluntario, antes y después de abril 2027.</p></div></div>
+    </section>
+
+    <!-- RESUMEN -->
+    <section class="screen" id="resumen" data-title="Resumen">
+      <div><p class="eyebrow">Tu caso en una pantalla</p><h1 id="sumH"></h1></div>
+      <div class="sumgrid" id="sumGrid"></div>
+      <div class="next">
+        <div><span class="num">~8 min</span></div>
+        <div class="grow"><p style="font-family:var(--head);font-size:26px;font-weight:600;opacity:1">El traspaso se hace en unos minutos, sin costo.</p><p>Yo me encargo del resto y te acompaño desde el primer mes.</p></div>
+        <button class="cta ghost" id="reset" style="background:#fff">Nuevo cliente</button>
+      </div>
+    </section>
+  </main>
+
+  <nav class="nav" id="nav"></nav>
+<div class="sheet-bg" id="sheetBg"></div>
+<div class="sheet" id="sheet"><div class="grab"></div><span class="pill b">Fuente y cálculo</span><h3 id="shT"></h3><dl id="shD"></dl><p class="warn" id="shW"></p></div>
+</div>
+
+
+
+<script>
+/* ======================================================================
+   DATOS — actualizar aquí cuando salga un nuevo informe SP.
+   ====================================================================== */
+const DATA = {
+  mes: "oct 2026",                       // último mes del período de rentabilidad
+  informe: "Rentabilidad real de los Fondos de Pensiones, octubre 2026 (deflactada por UF)",
+  comisionesFecha: "vigentes a noviembre 2026",
+  // Rentabilidad real promedio anual 27 sep 2002 – oct 2026 (Fondos A, B, C, D, E). Fuente: spensiones.cl
+  rent: {
+    Habitat:  [5.92,5.13,4.42,3.59,2.90],
+    Cuprum:   [5.87,5.07,4.27,3.50,2.71],
+    Capital:  [5.88,5.06,4.12,3.35,2.83],
+    Provida:  [5.84,4.84,3.84,3.08,2.40],
+    PlanVital:[5.62,4.92,4.05,3.13,2.29],
+    Sistema:  [5.87,5.02,4.18,3.34,2.70]
+  },
+  // Comisión por depósito de cotizaciones (% de la renta imponible)
+  com: { Habitat:1.27, Provida:1.45, Cuprum:1.44, Capital:1.44, PlanVital:1.16, Modelo:0.58, Uno:0.46 }
+};
+const AFPS = ["Provida","Cuprum","Capital","PlanVital","Modelo","Uno"];
+const NOHIST = ["Modelo","Uno"];   // sin historia completa desde 2002; no se muestra su comisión
+const FONDOS = ["A","B","C","D","E"];
+const ORDER = ["home","perfil","costo","rentab","proy","servicio","gen","resumen"];
+const NAV = [
+  ["home","Inicio",'<path d="M3 11 12 3l9 8"/><path d="M5 10v10h14V10"/>'],
+  ["perfil","Tu caso",'<circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/>'],
+  ["costo","Costo",'<circle cx="12" cy="12" r="9"/><path d="M15 9.5c-.5-1-1.6-1.5-3-1.5-1.7 0-3 .8-3 2s1.3 1.7 3 2 3 .8 3 2-1.3 2-3 2c-1.4 0-2.5-.5-3-1.5M12 6v2M12 16v2"/>'],
+  ["rentab","Rentabilidad",'<path d="M3 3v18h18"/><path d="m7 15 4-4 3 3 6-7"/>'],
+  ["proy","En el tiempo",'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>'],
+  ["servicio","Servicio",'<path d="M20 13c0 5-3.5 7.5-7.7 9a1 1 0 0 1-.6 0C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.2-2.7a1.2 1.2 0 0 1 1.6 0C14.5 3.8 17 5 19 5a1 1 0 0 1 1 1z"/>'],
+  ["gen","Generacionales",'<rect x="3" y="12" width="4" height="9" rx="1"/><rect x="10" y="8" width="4" height="13" rx="1"/><rect x="17" y="4" width="4" height="17" rx="1"/>'],
+  ["resumen","Resumen",'<path d="M9 11l3 3 8-8"/><path d="M20 12v7a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h9"/>']
+];
+
+const DEF = {afp:"Provida", fondo:2, sueldo:2500000, saldo:50000000, yrs:10, edad:42};
+let S = Object.assign({}, DEF);
+try{ const s=JSON.parse(localStorage.getItem("habitat-caso")); if(s) S=Object.assign(S,s);}catch(e){}
+const save=()=>{try{localStorage.setItem("habitat-caso",JSON.stringify(S))}catch(e){}};
+
+/* ---------- helpers ---------- */
+const $=id=>document.getElementById(id);
+const nf=new Intl.NumberFormat("es-CL");
+const clp=n=>(n<0?"−":"")+"$"+nf.format(Math.round(Math.abs(n)));
+const pct=n=>n.toFixed(2).replace(".",",")+"%";
+const short=n=>{const a=Math.abs(n); if(a>=1e6){const m=a/1e6; return "$"+(m>=100?Math.round(m):m.toFixed(m%1===0?0:1).replace(".",","))+"M";} return "$"+nf.format(Math.round(a/1000))+" mil";};
+function countUp(el,to,fmt,dur=900){
+  const from=+el.dataset.v||0; el.dataset.v=to; const t0=performance.now();
+  const step=t=>{const k=Math.min(1,(t-t0)/dur), e=1-Math.pow(1-k,3); el.textContent=fmt(from+(to-from)*e); if(k<1) requestAnimationFrame(step);};
+  requestAnimationFrame(step);
+}
+const hist=()=>!NOHIST.includes(S.afp);
+const rentOf=a=>DATA.rent[NOHIST.includes(a)?"Sistema":a];
+const youLabel=()=>hist()?S.afp:"Promedio del sistema";
+const cara=()=>DATA.com[S.afp]>DATA.com.Habitat;
+
+function calc(){
+  const f=S.fondo, rh=DATA.rent.Habitat[f], ry=rentOf(S.afp)[f];
+  const comH=S.sueldo*DATA.com.Habitat/100, comY=S.sueldo*DATA.com[S.afp]/100;
+  const difMes=comY-comH;                       // >0 ahorro con Habitat
+  const difRent=rh-ry;
+  const rentAnual=S.saldo*difRent/100;
+  const n=S.yrs;
+  const sh=S.saldo*Math.pow(1+rh/100,n), sy=S.saldo*Math.pow(1+ry/100,n);
+  const comAcum = hist()? difMes*12*n : 0;      // Modelo/Uno: no se muestra comisión
+  return {rh,ry,comH,comY,difMes,difAno:difMes*12,difRent,rentAnual,sh,sy,difSaldo:sh-sy,comAcum,total:(sh-sy)+comAcum};
+}
+
+/* ---------- navigation ---------- */
+let cur="home";
+function go(id){
+  if(id===cur) return;
+  const i=ORDER.indexOf(id), j=ORDER.indexOf(cur);
+  document.querySelectorAll(".screen").forEach(s=>{s.classList.remove("on","left"); if(ORDER.indexOf(s.id)<i) s.classList.add("left");});
+  $(id).classList.add("on"); cur=id;
+  $("ttl").textContent=$(id).dataset.title;
+  document.querySelectorAll(".nav button").forEach(b=>b.classList.toggle("on",b.dataset.go===id));
+  $("prog").style.width=(i/(ORDER.length-1)*100)+"%";
+  render(id,true);
+}
+$("nav").innerHTML=NAV.map(([id,l,p])=>`<button data-go="${id}"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${p}</svg>${l}</button>`).join("");
+document.addEventListener("click",e=>{
+  const g=e.target.closest("[data-go]"); if(g){go(g.dataset.go);return;}
+  const s=e.target.closest("[data-src]"); if(s){openSrc(s.dataset.src);return;}
+  const st=e.target.closest("[data-step]"); if(st){stepVal(st.dataset.step,+st.dataset.d);}
+});
+// swipe
+let tx=null,ty=null;
+$("stage").addEventListener("touchstart",e=>{ if(e.target.closest("input,.vchart")) {tx=null;return;} tx=e.touches[0].clientX;ty=e.touches[0].clientY;},{passive:true});
+$("stage").addEventListener("touchend",e=>{ if(tx===null) return; const dx=e.changedTouches[0].clientX-tx, dy=e.changedTouches[0].clientY-ty; tx=null;
+  if(Math.abs(dx)>90 && Math.abs(dx)>Math.abs(dy)*1.5){ const i=ORDER.indexOf(cur)+(dx<0?1:-1); if(i>=0&&i<ORDER.length) go(ORDER[i]); }},{passive:true});
+document.addEventListener("keydown",e=>{const i=ORDER.indexOf(cur); if(e.key==="ArrowRight"&&i<ORDER.length-1) go(ORDER[i+1]); if(e.key==="ArrowLeft"&&i>0) go(ORDER[i-1]);});
+
+/* ---------- profile ---------- */
+function setRange(id){const el=$(id); el.value=S[id]; el.style.setProperty("--p",((S[id]-el.min)/(el.max-el.min)*100)+"%");}
+function stepVal(id,d){const el=$(id); S[id]=Math.min(+el.max,Math.max(+el.min,S[id]+d*(+el.step)*(id==="saldo"?5:2))); save(); updateAll();}
+["sueldo","saldo","yrs","edad"].forEach(id=>$(id).addEventListener("input",e=>{S[id]=+e.target.value; save(); updateAll(true);}));
+
+function renderPerfil(){
+  $("afpChips").innerHTML=AFPS.map(a=>`<button class="chip ${S.afp===a?"on":""}" data-afp="${a}">${a}</button>`).join("");
+  $("fondoChips").innerHTML=FONDOS.map((f,i)=>`<button class="chip ${S.fondo===i?"on":""}" data-fondo="${i}">${f}</button>`).join("");
+  setRange("sueldo"); setRange("saldo");
+  $("sueldoV").textContent=clp(S.sueldo); $("saldoV").textContent=clp(S.saldo);
+  const c=calc(); let h;
+  if(cara()){
+    h=`<span class="pill g tag">Escenario · Doble beneficio</span><h2>Con Habitat pagas menos y tu ahorro rinde más.</h2>
+      <p class="lead">${S.afp} cobra ${pct(DATA.com[S.afp])} y Habitat ${pct(DATA.com.Habitat)}. Además, Habitat rentó más en el Fondo ${FONDOS[S.fondo]}.</p>
+      <div class="row"><div class="stat"><p class="lbl">Menos comisión al año</p><p class="num green">${clp(c.difAno)}</p></div><div class="stat"><p class="lbl">Rentabilidad extra al año</p><p class="num green">${clp(c.rentAnual)}</p></div></div>`;
+  } else if(hist()){
+    h=`<span class="pill b tag">Escenario · Rentabilidad neta</span><h2>Pagas un poco más de comisión, pero te queda más.</h2>
+      <p class="lead">${S.afp} cobra ${pct(DATA.com[S.afp])} y Habitat ${pct(DATA.com.Habitat)}. Lo que importa para tu pensión es el saldo final, y ahí manda la rentabilidad.</p>
+      <div class="row"><div class="stat"><p class="lbl">Costo extra al año</p><p class="num">${clp(-c.difAno)}</p></div><div class="stat"><p class="lbl">Rentabilidad extra al año</p><p class="num green">${clp(c.rentAnual)}</p></div></div>`;
+  } else {
+    h=`<span class="pill b tag">Escenario · Cliente consciente</span><h2>Elegiste por costo. Veamos lo que rinde tu ahorro.</h2>
+      <p class="lead">${S.afp} no tiene historia completa desde 2002, así que comparamos a Habitat con el promedio del sistema en el Fondo ${FONDOS[S.fondo]}.</p>
+      <div class="stat"><p class="lbl">Rentabilidad extra al año vs. promedio</p><p class="num green">${clp(c.rentAnual)}</p></div>`;
+  }
+  h+=`<button class="cta" data-go="costo" style="align-self:flex-start;margin-top:8px">Ver el caso →</button>`;
+  $("scen").innerHTML=h;
+}
+document.addEventListener("click",e=>{
+  const a=e.target.closest("[data-afp]"); if(a){S.afp=a.dataset.afp; save(); updateAll();}
+  const f=e.target.closest("[data-fondo]"); if(f){S.fondo=+f.dataset.fondo; save(); updateAll();}
+});
+
+/* ---------- costo ---------- */
+function renderCosto(anim){
+  const c=calc();
+  $("costoSueldo").textContent=clp(S.sueldo);
+  const list=["Provida","Cuprum","Capital","Habitat","PlanVital"];
+  const max=Math.max(...list.map(a=>DATA.com[a]));
+  $("costoBars").innerHTML=list.map(a=>{
+    const you=a===S.afp, hab=a==="Habitat";
+    return `<div class="bar ${hab?"hab":""} ${you?"you":""}"><span class="nm">${a}${you?'<span class="youtag">TÚ</span>':""}<small>${pct(DATA.com[a])}</small></span><span class="tr"><span class="fl" data-w="${DATA.com[a]/max*100}"></span></span><span class="v">${clp(S.sueldo*DATA.com[a]/100)}</span></div>`;}).join("");
+  requestAnimationFrame(()=>requestAnimationFrame(()=>document.querySelectorAll("#costoBars .fl").forEach(el=>el.style.width=el.dataset.w+"%")));
+  const st=$("costoStat"), calcEl=$("costoCalc");
+  if(!hist()){
+    $("costoH").textContent="Tu AFP cobra menos comisión. La diferencia está en lo que rinde.";
+    st.innerHTML=`<p class="lbl">Comisión Habitat</p><p class="num blue" id="cs1"></p><p class="sub">al mes con tu sueldo. Lo que se juega tu pensión está en la rentabilidad del saldo →</p><button class="cta" data-go="rentab" style="margin-top:18px">Ver rentabilidad</button>`;
+    countUp($("cs1"),c.comH,clp);
+    calcEl.innerHTML=`<b>${clp(S.sueldo)}</b><span class="op">×</span><b>${pct(DATA.com.Habitat)}</b><span class="op">=</span><b class="res">${clp(c.comH)}</b>`;
+  } else if(cara()){
+    $("costoH").textContent=`Con Habitat pagas menos comisión que en ${S.afp}.`;
+    st.innerHTML=`<p class="lbl">Te ahorras al año</p><p class="num green" id="cs1"></p><p class="sub"><b class="green" id="cs2"></b> menos cada mes, directo a tu sueldo líquido.</p>`;
+    countUp($("cs1"),c.difAno,clp); countUp($("cs2"),c.difMes,clp);
+    calcEl.innerHTML=`<b>${clp(c.comY)}</b><span class="op">−</span><b>${clp(c.comH)}</b><span class="op">=</span><b class="res g">${clp(c.difMes)}</b><span>al mes</span>`;
+  } else {
+    $("costoH").textContent=`Habitat cobra un poco más que ${S.afp}. Te lo muestro claro.`;
+    st.innerHTML=`<p class="lbl">Diferencia al año</p><p class="num" id="cs1"></p><p class="sub"><b id="cs2"></b> al mes. Ahora mira lo que rinde tu ahorro con esa diferencia →</p><button class="cta" data-go="rentab" style="margin-top:18px">Ver rentabilidad</button>`;
+    countUp($("cs1"),-c.difAno,clp); countUp($("cs2"),-c.difMes,clp);
+    calcEl.innerHTML=`<b>${clp(c.comH)}</b><span class="op">−</span><b>${clp(c.comY)}</b><span class="op">=</span><b class="res">${clp(-c.difMes)}</b><span>al mes</span>`;
+  }
+}
+
+/* ---------- rentabilidad ---------- */
+function renderRentab(){
+  const c=calc(), you=rentOf(S.afp), hab=DATA.rent.Habitat;
+  $("legYou").textContent=youLabel();
+  $("rentH").textContent= hist()? `Habitat rentó más que ${S.afp} en los 5 fondos.` : `Habitat rentó más que el promedio del sistema en los 5 fondos.`;
+  const max=Math.max(...hab,...you)*1.12;
+  $("vchart").innerHTML=FONDOS.map((f,i)=>`<button class="fgroup ${S.fondo===i?"on":""}" data-fondo="${i}"><span class="fbars"><span class="fb hab" data-h="${hab[i]/max*100}"><span>${pct(hab[i])}</span></span><span class="fb" data-h="${you[i]/max*100}"><span class="ink2">${pct(you[i])}</span></span></span><span class="fname">Fondo ${f}</span></button>`).join("");
+  requestAnimationFrame(()=>requestAnimationFrame(()=>document.querySelectorAll("#vchart .fb").forEach(el=>el.style.height=el.dataset.h+"%")));
+  $("rentStat").innerHTML=`<p class="lbl">Fondo ${FONDOS[S.fondo]} · con tu saldo de ${short(S.saldo)}</p><p class="num green" id="rs1"></p><p class="sub">más al año con Habitat: <b class="blue">+${c.difRent.toFixed(2).replace(".",",")} puntos</b> de rentabilidad anual.</p>`;
+  countUp($("rs1"),c.rentAnual,clp);
+  $("rentCalc").innerHTML=`<span>(</span><b>${pct(c.rh)}</b><span class="op">−</span><b>${pct(c.ry)}</b><span>)</span><span class="op">×</span><b>${clp(S.saldo)}</b><span class="op">=</span><b class="res g">${clp(c.rentAnual)}</b>`;
+}
+
+/* ---------- proyección ---------- */
+function renderProy(anim){
+  const c=calc(); setRange("yrs");
+  $("yrsV").textContent=S.yrs+(S.yrs===1?" año":" años");
+  $("legYou2").textContent="Saldo con "+youLabel();
+  $("proyH").textContent=`En ${S.yrs} ${S.yrs===1?"año":"años"}, la diferencia a tu favor suma ${short(c.total)}.`;
+  // chart
+  const svg=$("line"), W=svg.clientWidth||700, H=svg.clientHeight||260;
+  svg.setAttribute("viewBox",`0 0 ${W} ${H}`);
+  const f=S.fondo, rh=DATA.rent.Habitat[f]/100, ry=rentOf(S.afp)[f]/100, n=S.yrs;
+  const ph=[],py=[]; for(let t=0;t<=n;t++){ph.push(S.saldo*Math.pow(1+rh,t)); py.push(S.saldo*Math.pow(1+ry,t));}
+  const lo=S.saldo*0.95, hi=ph[n]*1.04, pl=72, pr=16, pt=12, pb=30;
+  const X=t=>pl+(W-pl-pr)*t/n, Y=v=>pt+(H-pt-pb)*(1-(v-lo)/(hi-lo));
+  const path=a=>a.map((v,t)=>(t?"L":"M")+X(t).toFixed(1)+","+Y(v).toFixed(1)).join("");
+  const area=path(ph)+py.slice().reverse().map((v,k)=>"L"+X(n-k).toFixed(1)+","+Y(v).toFixed(1)).join("")+"Z";
+  let grid=""; for(let k=0;k<=3;k++){const v=lo+(hi-lo)*k/3; grid+=`<line x1="${pl}" x2="${W-pr}" y1="${Y(v)}" y2="${Y(v)}" stroke="#E4E0D8"/><text x="${pl-10}" y="${Y(v)+5}" text-anchor="end" font-size="13" fill="#8A909C" font-family="Public Sans">${short(v)}</text>`;}
+  const ticks=[0,Math.round(n/2),n].filter((v,i,a)=>a.indexOf(v)===i).map(t=>`<text x="${X(t)}" y="${H-6}" text-anchor="middle" font-size="13" fill="#8A909C" font-family="Public Sans">${t===0?"Hoy":"Año "+t}</text>`).join("");
+  svg.innerHTML=`${grid}${ticks}<path d="${area}" fill="#DDF1E5"/><path d="${path(py)}" fill="none" stroke="#B7BBC3" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/><path id="ph" d="${path(ph)}" fill="none" stroke="#C90A2C" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/><circle cx="${X(n)}" cy="${Y(ph[n])}" r="7" fill="#C90A2C"/><circle cx="${X(n)}" cy="${Y(py[n])}" r="6" fill="#B7BBC3"/>`;
+  if(anim){const p=$("ph"),L=p.getTotalLength(); p.style.strokeDasharray=L; p.style.strokeDashoffset=L; p.getBoundingClientRect(); p.style.transition="stroke-dashoffset 1.1s cubic-bezier(.2,.8,.2,1)"; p.style.strokeDashoffset=0;}
+  // stats
+  let h=`<div class="card stat"><p class="lbl">Más saldo con Habitat</p><p class="num green" style="font-size:44px" id="ps1"></p><p class="sub">${clp(c.sh)} vs ${clp(c.sy)}</p></div>`;
+  if(hist()) h+=`<div class="card stat"><p class="lbl">${cara()?"Ahorro en comisión":"Costo extra en comisión"}</p><p class="num ${cara()?"green":""}" style="font-size:44px" id="ps2"></p><p class="sub">${clp(Math.abs(c.difAno))} al año × ${S.yrs} ${S.yrs===1?"año":"años"}</p></div>`;
+  h+=`<div class="card stat" style="background:var(--greensoft)"><p class="lbl">${hist()?"Resultado neto a tu favor":"Total a tu favor"}</p><p class="num green" style="font-size:50px" id="ps3"></p></div>`;
+  $("proyStats").innerHTML=h;
+  countUp($("ps1"),c.difSaldo,clp); if(hist()) countUp($("ps2"),Math.abs(c.comAcum),clp); countUp($("ps3"),c.total,clp);
+}
+
+
+/* ---------- fondos generacionales ---------- */
+const FG=[["Inicial","hasta 35",0,35],["2","36–40",36,40],["3","41–45",41,45],["4","46–50",46,50],["5","51–55",51,55],["6","56–60",56,60],["7","61–65",61,65],["8","66–70",66,70],["9","71–75",71,75],["Consolid.","76+",76,200]];
+const fgOf=e=>FG.findIndex(f=>e>=f[2]&&e<=f[3])<0?0:FG.findIndex(f=>e>=f[2]&&e<=f[3]);
+function renderGen(){
+  setRange("edad"); $("edadV").textContent=S.edad+" años";
+  const k=fgOf(S.edad);
+  $("fgBars").innerHTML=FG.map((f,i)=>{const g=Math.round(92-i*8.5);return `<button class="fgc ${i===k?"on":""}" data-edad="${i===0?30:i===9?78:f[2]+2}"><span class="stk"><span class="gr" style="flex-grow:${g}"></span><span class="pr" style="flex-grow:${100-g}"></span></span><span class="et">${i+1}</span><span class="ag">${f[1]}</span></button>`}).join("");
+  const name=k===0?"Fondo Inicial":k===9?"Fondo de Consolidación":"Fondo Intermedio · Etapa "+(k+1);
+  const foco=k<=2?"crecimiento del ahorro":k<=5?"equilibrio entre crecer y proteger":"protección de tu pensión";
+  $("fgYou").innerHTML=`<p class="flabel">Con ${S.edad} años quedarías en</p><p class="num" style="font-size:24px;margin-top:4px">${name}</p><p class="small" style="font-size:15px;margin-top:4px">Tramo ${FG[k][1]} años. Foco: <b class="blue">${foco}</b>.</p>`;
+}
+document.addEventListener("click",e=>{const b=e.target.closest("[data-edad]"); if(b){S.edad=+b.dataset.edad; save(); renderGen();}});
+
+/* ---------- resumen ---------- */
+function renderResumen(){
+  const c=calc();
+  $("sumH").textContent= cara()? `Pagas menos, rentas más y tienes a alguien a cargo.` : `Lo que importa es lo que te queda. Y con Habitat te queda más.`;
+  const cards=[];
+  if(hist()) cards.push(`<div class="card stat"><p class="lbl">${cara()?"Menos comisión al año":"Diferencia de comisión al año"}</p><p class="num ${cara()?"green":""}">${cara()?clp(c.difAno):clp(-c.difAno)}</p><p class="sub">${S.afp} ${pct(DATA.com[S.afp])} vs Habitat ${pct(DATA.com.Habitat)}</p></div>`);
+  cards.push(`<div class="card stat"><p class="lbl">Rentabilidad extra al año</p><p class="num green">${clp(c.rentAnual)}</p><p class="sub">Fondo ${FONDOS[S.fondo]}, saldo ${short(S.saldo)}</p></div>`);
+  cards.push(`<div class="card stat hl"><p class="lbl">A tu favor en ${S.yrs} ${S.yrs===1?"año":"años"}</p><p class="num green">${clp(c.total)}</p><p class="sub">Escenario referencial · ver "En el tiempo"</p></div>`);
+  if(!hist()) cards.unshift(`<div class="card stat"><p class="lbl">Respaldo</p><p class="num blue">N°1</p><p class="sub">en rentabilidad en los 5 fondos desde 2002</p></div>`);
+  $("sumGrid").innerHTML=cards.join("");
+}
+$("reset").addEventListener("click",()=>{S=Object.assign({},DEF); save(); updateAll(); go("perfil");});
+
+/* ---------- fuentes ---------- */
+const SRC={
+  ranking:()=>["Habitat N°1 en los 5 fondos",[["Fuente","Superintendencia de Pensiones, "+DATA.informe+"."],["Dato","Rentabilidad real promedio anual (deflactada por UF), sep 2002 – "+DATA.mes+", Fondos A a E."],["Período","Desde el inicio de los multifondos."]]],
+  comision:()=>["Comisión de administración",[["Fuente","Superintendencia de Pensiones, comisiones por depósito de cotizaciones "+DATA.comisionesFecha+"."],["Cálculo","Sueldo imponible × comisión de cada AFP."],["Tu caso",clp(S.sueldo)+" × "+pct(DATA.com.Habitat)+" = "+clp(S.sueldo*DATA.com.Habitat/100)+" al mes en Habitat."],["Ojo","La comisión se cobra sobre el sueldo, hasta el tope imponible. La más baja del sistema hoy es AFP Uno (0,46%)."]]],
+  rentab:()=>{const c=calc();return["Rentabilidad por fondo",[["Fuente","Superintendencia de Pensiones, "+DATA.informe+"."],["Dato","Rentabilidad real promedio anual, sep 2002 – "+DATA.mes+"."+(hist()?"":" Modelo y Uno no tienen historia completa en el período: se usa el promedio del sistema.")],["Cálculo","(Rentabilidad Habitat − rentabilidad "+youLabel()+") × saldo."],["Tu caso","("+pct(c.rh)+" − "+pct(c.ry)+") × "+clp(S.saldo)+" = "+clp(c.rentAnual)+" al año."]]]},
+  gen:()=>["Fondos Generacionales",[["Fuente","Superintendencia de Pensiones, Régimen de Inversión de los Fondos Generacionales (1 sep 2026). Ley N° 21.735 de Reforma Previsional."],["Desde","1 de abril de 2027 reemplaza a los multifondos A, B, C, D y E."],["Estructura","10 fondos: Inicial (hasta 35 años), 8 Intermedios en tramos de 5 años y Consolidación (más de 75)."],["Asignación","Según año de nacimiento. El ahorro obligatorio permanece en ese fondo hasta pensionarse; el ahorro voluntario puede ir al fondo que la persona elija."],["Gráfico","Ilustrativo: muestra que el riesgo baja con la edad, no los porcentajes exactos de cada fondo."]]],
+  proy:()=>{const c=calc();return["Cómo se calcula la proyección",[["Saldo","Saldo actual × (1 + rentabilidad anual)^años, con la rentabilidad histórica del Fondo "+FONDOS[S.fondo]+" de cada AFP."],["Comisión",hist()?"Diferencia de comisión mensual × 12 × años. Sale de tu sueldo, no del saldo.":"No se incluye."],["Supuestos","Sin nuevos aportes ni cambios de fondo. Montos en pesos de hoy (rentabilidad real)."],["Tu caso",clp(c.sh)+" con Habitat vs "+clp(c.sy)+" con "+youLabel()+"."]]]}
+};
+function openSrc(k){const [t,rows]=SRC[k](); $("shT").textContent=t; $("shD").innerHTML=rows.map(([a,b])=>`<dt>${a}</dt><dd>${b}</dd>`).join(""); $("shW").textContent="Valores referenciales. La rentabilidad pasada no garantiza rentabilidades futuras. Datos a "+DATA.mes+", Superintendencia de Pensiones."; $("sheet").classList.add("on"); $("sheetBg").classList.add("on");}
+const closeSrc=()=>{$("sheet").classList.remove("on");$("sheetBg").classList.remove("on");};
+$("sheetBg").addEventListener("click",closeSrc); $("sheet").addEventListener("click",closeSrc);
+
+/* ---------- render ---------- */
+function updateCase(){ $("caseTxt").textContent=`${S.afp} · Fondo ${FONDOS[S.fondo]} · ${short(S.sueldo)} · ${short(S.saldo)}`; }
+function render(id,anim){ ({perfil:renderPerfil,costo:renderCosto,rentab:renderRentab,proy:renderProy,gen:renderGen,resumen:renderResumen})[id]?.(anim); }
+let raf=null;
+function updateAll(fast){ updateCase(); if(fast){ if(cur==="perfil"){ $("sueldoV").textContent=clp(S.sueldo); $("saldoV").textContent=clp(S.saldo); setRange("sueldo"); setRange("saldo"); cancelAnimationFrame(raf); raf=requestAnimationFrame(renderPerfil);} else render(cur,false); } else render(cur,false); }
+document.querySelectorAll(".dataMonth").forEach(e=>e.textContent=DATA.mes);
+addEventListener("resize",()=>{ if(cur==="proy") renderProy(false); });
+updateCase();
+$("home").classList.add("on");
+document.querySelectorAll(".nav button")[0].classList.add("on");
+
+/* ---------- ajustar a la pantalla (sin desplazamiento) ---------- */
+const APP=document.querySelector(".app");
+function fit(){ const land=innerWidth>=innerHeight, W=land?1280:820, r=innerHeight/innerWidth, H=Math.round(land?Math.min(980,Math.max(700,W*r)):Math.min(1500,Math.max(1050,W*r)));
+  APP.style.width=W+"px"; APP.style.height=H+"px";
+  const k=Math.min(innerWidth/W, innerHeight/H);
+  APP.style.transform=`translate(${(innerWidth-W*k)/2}px,${(innerHeight-H*k)/2}px) scale(${k})`;
+  if(cur==="proy") renderProy(false); }
+addEventListener("resize",fit); addEventListener("orientationchange",()=>setTimeout(fit,200)); fit();
+$("fsBtn").addEventListener("click",()=>{ try{ document.fullscreenElement? document.exitFullscreen() : document.documentElement.requestFullscreen().catch(()=>{}); }catch(e){} });
+if(matchMedia("(display-mode: fullscreen), (display-mode: standalone)").matches) $("fsBtn").style.display="none";
+
+/* ---------- offline ---------- */
+if("serviceWorker" in navigator && location.protocol==="https:") navigator.serviceWorker.register("sw.js").catch(()=>{});
+</script>
+</body>
+</html>
