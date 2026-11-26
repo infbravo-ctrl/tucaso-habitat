@@ -68,6 +68,11 @@ h2{font-family:var(--head);font-weight:700;font-size:34px;line-height:1.12;lette
 #home{flex-direction:row;padding:0;gap:0}
 .home-l{flex:1.05;padding:44px 52px 36px;display:flex;flex-direction:column;justify-content:space-between}
 .home-l img{width:340px}
+.app.is-home .top img,.app.is-home .top .sep,.app.is-home .top .ttl{display:none}
+.app.is-home .top{background:transparent;border-bottom:0;position:absolute;right:0;top:0;padding:14px 20px}
+.app.is-home .top .sp{display:none}
+.top{grid-row:1}.stage{grid-row:2}.nav{grid-row:3}
+.app.is-home .top{z-index:6}
 .home-l h1{font-size:50px;margin-top:4px}
 .home-r{flex:1;background:var(--red);position:relative;overflow:hidden;display:flex;flex-direction:column;justify-content:center;gap:16px;padding:48px}
 .home-r::before{content:"";position:absolute;right:-120px;top:-120px;width:420px;height:420px;border:56px solid rgba(255,255,255,.08);border-radius:50%}
@@ -220,7 +225,7 @@ svg.line{width:100%;height:100%;overflow:visible}
 /* ---------- portrait ---------- */
 @media (orientation:portrait){
   #home{flex-direction:column}
-  .home-l{flex:none;padding:40px}
+  .home-l{flex:none;padding:84px 40px 36px;gap:28px}
   .home-r{flex:1;padding:32px 40px}
   .grid2{grid-template-columns:1fr}
   .row.st{flex-direction:column}
@@ -260,7 +265,7 @@ svg.line{width:100%;height:100%;overflow:visible}
         </div>
         <div style="display:flex;align-items:center;gap:20px;flex-wrap:wrap">
           <button class="cta" data-go="perfil">Armar tu caso <span>→</span></button>
-          <p class="agent"><b>José Miguel Bravo</b><br>Ejecutivo previsional · AFP Habitat</p>
+          <p class="agent"><b>José Miguel Bravo</b><br>Ejecutivo previsional</p>
         </div>
       </div>
       <div class="home-r">
@@ -469,7 +474,7 @@ function go(id){
   const i=ORDER.indexOf(id), j=ORDER.indexOf(cur);
   document.querySelectorAll(".screen").forEach(s=>{s.classList.remove("on","left"); if(ORDER.indexOf(s.id)<i) s.classList.add("left");});
   $(id).classList.add("on"); cur=id;
-  $("ttl").textContent=$(id).dataset.title;
+  $("ttl").textContent=$(id).dataset.title; document.querySelector(".app").classList.toggle("is-home",id==="home");
   document.querySelectorAll(".nav button").forEach(b=>b.classList.toggle("on",b.dataset.go===id));
   $("prog").style.width=(i/(ORDER.length-1)*100)+"%";
   render(id,true);
@@ -635,7 +640,7 @@ function updateAll(fast){ updateCase(); if(fast){ if(cur==="perfil"){ $("sueldoV
 document.querySelectorAll(".dataMonth").forEach(e=>e.textContent=DATA.mes);
 addEventListener("resize",()=>{ if(cur==="proy") renderProy(false); });
 updateCase();
-$("home").classList.add("on");
+$("home").classList.add("on"); document.querySelector(".app").classList.add("is-home");
 document.querySelectorAll(".nav button")[0].classList.add("on");
 
 /* ---------- ajustar a la pantalla (sin desplazamiento) ---------- */
